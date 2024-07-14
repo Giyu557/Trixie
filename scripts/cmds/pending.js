@@ -52,7 +52,7 @@ onReply: async function({ api, event, Reply, getLang, commandName, prefix }) {
 ➭ BotName: 義 𝗚𝗶𝘆𝘂 | 🌊 勇
 ➭ Bot Prefix: ⟨ / ⟩
 ➭ Admin: ⟨ 𝗚𝗔𝗕 𝗬𝗨 ⟩
-➭ Ownerlink: ‹https://www.facebook.com/100079114908948›
+➭ Ownerlink: ‹https://www.facebook.com/61562362827346›
 ➭ Use /help to view command details`, Reply.pending[singleIndex - 1].threadID);
             count+=1;
         }
@@ -84,4 +84,4 @@ onStart: async function({ api, event, getLang, commandName }) {
   }, messageID);
     else return api.sendMessage(getLang("returnListClean"), threadID, messageID);
 }
-}
+              }
