@@ -1,66 +1,119 @@
-const { getPrefix, getStreamFromURL, uploadImgbb } = global.utils;
-async function ai({ message: m, event: e, args: a, usersData: u }) {
-  var p = [`${await getPrefix(e.threadID)}${this.config.name}`,
-`${this.config.name}`
-/*"ai"
-*""
-*/
-]; 
- if (p.some(b => a[0].toLowerCase().startsWith(b))) {
-try {      
-let prompt = "";
-if (e.type === "message_reply" && e.messageReply.attachments && e.messageReply.attachments[0]?.type === "photo") {
- const b = await uploadImgbb(e.messageReply.attachments[0].url);
-prompt = a.slice(1).join(" ") + ' ' + b.image.url;
-} else {
- prompt = a.slice(1).join(" ");
-}
- var __ = [{ id: e.senderID, tag: await u.getName(e.senderID) }];
- const r = await require("axios").post(`https://test-ai-ihc6.onrender.com/api`, {
-  prompt: prompt,
- apikey: "GayKey-oWHmMb1t8ASljhpgSSUI",
-  name: __[0]['tag'],
- id: __[0]['id'],
- });
-var _ = r.data.result.replace(/{name}/g, __[0]['tag']).replace(/{pn}/g, p[0]);
- if (r.data.av) {
- if (Array.isArray(r.data.av)) {
- const avs = r.data.av.map(url => getStreamFromURL(url));
- const avss = await Promise.all(avs);
-  m.reply({
- body: _,
- mentions: __,
- attachment: avss
- });
- } else {
- m.reply({
- body: _,
- mentions: __,
-attachment: await getStreamFromURL(r.data.av)
-  });
-  }
-  } else {
-m.reply({
-body: _,
-mentions: __
-  });
-  }
-  } catch (error) {
- m.reply("Error " + error);
- }
- }
-}
+const axios = require('axios');
+const moment = require('moment-timezone');
+const NodeCache = require('node-cache');
+// Initialize cache
+const cache = new NodeCache({ stdTTL: 600, checkperiod: 120 });
+
+// Add more Apis or Ai services here.
+const services = [
+    { url: 'http://markdevs-last-api.onrender.com/api/v2/gpt4', param: 'query' },
+    { url: 'https://markdevs-last-api.onrender.com/api/v3/gpt4', param: 'ask' },
+    { url: 'https://markdevs-last-api.onrender.com/gpt4', param: 'prompt', uid: 'uid' }
+];
+
+const designatedHeader = "Izumi 𝙰𝚒";
+
+const getAIResponse = async (question, messageID) => {
+    // Check if response is cached
+    const cachedResponse = cache.get(question);
+    if (cachedResponse) {
+        return { response: cachedResponse, messageID };
+    }
+
+    const response = await getAnswerFromAI(question.trim() || "hi");
+    // Cache the response
+    cache.set(question, response);
+    return { response, messageID };
+};
+
+const getAnswerFromAI = async (question) => {
+    const promises = services.map(({ url, param, uid }) => {
+        const params = uid ? { [param]: question, [uid]: '61562362827346' } : { [param]: question };
+        return fetchFromAI(url, params);
+    });
+
+    const responses = await Promise.allSettled(promises);
+    for (const { status, value } of responses) {
+        if (status === 'fulfilled' && value) {
+            return value;
+        }
+    }
+
+    throw new Error("No valid response from any AI service");
+};
+
+const fetchFromAI = async (url, params) => {
+    try {
+        const { data } = await axios.get(url, { params });
+        return data.gpt4 || data.reply || data.response || data.answer || data.message;
+    } catch (error) {
+        console.error("Network Error:", error.message);
+        return null;
+    }
+};
+
+const handleCommand = async (api, event, args, message, usersData ) => {
+    const name = await usersData.getName(event.senderID);
+    try {
+        const question = args.join(" ").trim();
+        if (!question) return message.reply("Please provide a question to get an answer.");
+        const { response, messageID } = await getAIResponse(question, event.messageID);
+        api.sendMessage(`義 𝗚𝗶𝘆𝘂 | 🌊 勇 \n━━━━━━━━━━━━━━━━\n${response}\n━━━━━━━━━━━━━━━━\n🗣 Asked by: ${name}\n⏰ 𝑅𝑒𝑠𝑝𝑜𝑛𝑑 𝑇𝑖𝑚𝑒: ${moment.tz("Asia/Manila").format("DD/MM/YYYY, h:mm:ss A")}`, event.threadID, messageID);
+    } catch (error) {
+        console.error("Error in handleCommand:", error.message);
+        message.reply("An error occurred while processing your request.");
+    }
+};
+
+const onStart = async ({ api, event, args, usersData }) => {
+    const name = await usersData.getName(event.senderID);
+    try {
+        const input = args.join(' ').trim();
+        const { response, messageID } = await getAIResponse(input, event.messageID);
+        api.sendMessage(`義 𝗚𝗶𝘆𝘂 | 🌊 勇 \n━━━━━━━━━━━━━━━━\n${response}\n━━━━━━━━━━━━━━━━\n🗣 Asked by: ${name}\n⏰ 𝑅𝑒𝑠𝑝𝑜𝑛𝑑 𝑇𝑖𝑚𝑒: ${moment.tz("Asia/Manila").format("DD/MM/YYYY, h:mm:ss A")}`, event.threadID, messageID);
+    } catch (error) {
+        console.error("Error in onStart:", error.message);
+        api.sendMessage("An error occurred while processing your request.", event.threadID);
+    }
+};
+
+const onChat = async ({ event, api, usersData }) => {
+    const name = await usersData.getName(event.senderID);
+    const messageContent = event.body.trim().toLowerCase();
+    const isReplyToBot = event.messageReply && event.messageReply.senderID === api.getCurrentUserID();
+    const isDirectMessage = messageContent.startsWith("ai") && event.senderID !== api.getCurrentUserID();
+
+    if (isReplyToBot) {
+        const repliedMessage = event.messageReply.body || "";
+        if (!repliedMessage.startsWith(designatedHeader)) {
+            return;
+        }
+    }
+
+    if (isReplyToBot || isDirectMessage) {
+        const userMessage = isDirectMessage ? messageContent.replace(/^ai\s*/, "").trim() : messageContent;
+        const botReplyMessage = isReplyToBot ? event.messageReply.body : "";
+        const input = `${botReplyMessage}\n${userMessage}`.trim();
+
+        try {
+            const { response, messageID } = await getAIResponse(input, event.messageID);
+            api.sendMessage(`義 𝗚𝗶𝘆𝘂 | 🌊 勇 \n━━━━━━━━━━━━━━━━\n${response}\n━━━━━━━━━━━━━━━━\n🗣 Asked by: ${name}\n⏰ 𝑅𝑒𝑠𝑝𝑜𝑛𝑑 𝑇𝑖𝑚𝑒: ${moment.tz("Asia/Manila").format("DD/MM/YYYY, h:mm:ss A")}`, event.threadID, messageID);
+        } catch (error) {
+            console.error("Error in onChat:", error.message);
+            api.sendMessage("An error occurred while processing your request.", event.threadID);
+        }
+    }
+};
+
 module.exports = {
-config: {
- name: "ai",
-aliases: [],
-version: 1.6,
-author: "Jun",
-role: 0,
- shortDescription: "An AI that can do various tasks",
- guide: "{pn} <query>",
- category: "AI"
- },
- onStart: function() {},
- onChat: ai
+    config: {
+        name: 'ai',
+        author: 'coffee',
+        role: 0,
+        category: 'ai',
+        shortDescription: 'AI to answer any question',
+    },
+    onStart,
+    onChat,
+    handleCommand
 };
