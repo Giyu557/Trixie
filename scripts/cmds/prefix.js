@@ -94,7 +94,7 @@ module.exports = {
 
       successThisThread: "𝗖𝗵𝗮𝗻𝗴𝗲𝗱 𝗽𝗿𝗲𝗳𝗶𝘅 𝗶𝗻 𝘆𝗼𝘂𝗿 𝗯𝗼𝘅 𝗰𝗵𝗮𝘁 𝘁𝗼: %1",
 
-      myPrefix: "\n\n🟢\x20\x20\x20\x20[✰-𝗣𝗥𝗘𝗙𝗜𝗫⊰⊱❊]\x20\x20\x20\x20🟢\n\n┏━━ [ 義 𝗚𝗶𝘆𝘂 | 🌊 勇 ]━━➣\n┃🌊 𝗦𝘆𝘀𝘁𝗲𝗺 𝗽𝗿𝗲𝗳𝗶𝘅: [ %1 ]\n┃🌊 𝗬𝗼𝘂𝗿 𝗯𝗼𝘅 𝗰𝗵𝗮𝘁 𝗽𝗿𝗲𝗳𝗶𝘅: [ %2 ]\n┗━━━━━━━━━━━━➢"
+      myPrefix: "\n\n🟢\x20\x20\x20\x20[✰-𝗣𝗥𝗘𝗙𝗜𝗫⊰⊱❊]\x20\x20\x20\x20🟢\n\n┏━━ [ 義 𝗚𝗶𝘆𝘂 | 🌊 勇 ]━━➣\n┃ ➩ 𝗦𝘆𝘀𝘁𝗲𝗺 𝗽𝗿𝗲𝗳𝗶𝘅: [ %1 ]\n┃➩ 𝗬𝗼𝘂𝗿 𝗯𝗼𝘅 𝗰𝗵𝗮𝘁 𝗽𝗿𝗲𝗳𝗶𝘅: [ %2 ]\n┗━━━━━━━━━━━━➢"
 
     }
 
@@ -200,9 +200,9 @@ module.exports = {
 
     const xyrene = {
 
-      body: `🈷\x20\x20\x20\x20\x20\x20\x20${name}\x20\x20\x20\x20\x20\x20\x20🈷` + getLang("myPrefix", global.GoatBot.config.prefix, utils.getPrefix(event.threadID)),
+      body: `𒅒\x20\x20\x20\x20\x20\x20\x20${name}\x20\x20\x20\x20\x20\x20\x20𒅒` + getLang("myPrefix", global.GoatBot.config.prefix, utils.getPrefix(event.threadID)),
 
-      attachment: await global.utils.getStreamFromURL("https://i.imgur.com/DPTioGT.gif")
+      attachment: await global.utils.getStreamFromURL("https://i.imgur.com/AXIMfSE.gif")
 
         };
 
